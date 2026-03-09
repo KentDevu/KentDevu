@@ -1,25 +1,29 @@
-name: GitHub Snake
+name: Generate Snake
+
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *'   # daily
+  workflow_dispatch:      # allows manual run
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Generate Snake
-        uses: platane/snk@v1.2.0
+      - name: Generate contribution snake
+        uses: Platane/snk/svg-only@v3
         with:
-          github_user_name: KentDevu
+          github_user_name: ${{ github.repository_owner }}
+          outputs: |
+            output/github-contribution-grid-snake.svg
+            output/github-contribution-grid-snake-dark.svg?palette=github-dark
 
-      - name: Commit & Push
+      - name: Commit and push snake
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          mkdir -p ./output
-          git add ./output/github-contribution-grid-snake.svg
-          git commit -m "Update Snake contribution" || echo "No changes to commit"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add output/
+          git commit -m "Update snake" || echo "No changes"
           git push
