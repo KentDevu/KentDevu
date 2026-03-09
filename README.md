@@ -6,10 +6,9 @@
 
 ---
 
-### 🐍 The Contribution Eater
+### 📊 Contribution Grid
 <div align="center">
-  <!-- This points to the branch created by the Action above -->
-  <img src="https://raw.githubusercontent.com/KentDevu/KentDevu/output/github-contribution-grid-snake.svg" alt="snake game" />
+  <img src="https://github-readme-stats.vercel.app/api?username=KentDevu&show_icons=true&theme=tokyonight&count_private=true&include_all_commits=true&hide_border=true&hide_title=true&layout=compact" alt="Contribution Grid" />
 </div>
 
 ---
@@ -34,7 +33,7 @@
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=flat-square&logo=typescript&logoColor=white) ![JavaScript](https://img.shields.io/badge/javascript-%23F7DF1E.svg?style=flat-square&logo=javascript&logoColor=black) ![Python](https://img.shields.io/badge/python-3670A0?style=flat-square&logo=python&logoColor=ffdd54) ![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=flat-square&logo=openjdk&logoColor=white) ![PHP](https://img.shields.io/badge/php-%23777BB4.svg?style=flat-square&logo=php&logoColor=white)
 
 #### 🚀 Frameworks & Libraries
-**Frontend:** ![Next JS](https://img.shields.io/badge/Next-black?style=flat-square&logo=next.js&logoColor=white) ![React](https://img.shields.io/badge/react-%2320232a.svg?style=flat-square&logo=react&logoColor=%2361DAFB) ![Svelte](https://img.shields.io/badge/svelte-%23f1413d.svg?style=flat-square&logo=svelte&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=flat-square&logo=tailwind-css&logoColor=white)
+**Frontend:** ![Next JS](https://img.shields.io/badge/Next-black?style=flat-square&logo=next.js&logoColor=white) ![React](https://img.shields.io/badge/react-%2320232a.svg?style=flat-square&logo=react&logoColor=%2361DAFB) ![Svelte](https://img.shields.io/badge/svelte-%23f1413d.svg?style=flat-square&logo=svelte&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=flat-square&logo=tailwind-css&logoColor=white)  
 **Backend:** ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=flat-square&logo=express&logoColor=%2361DAFB) ![Django](https://img.shields.io/badge/django-%23092E20.svg?style=flat-square&logo=django&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat-square&logo=fastapi) ![Laravel](https://img.shields.io/badge/laravel-%23FF2D20.svg?style=flat-square&logo=laravel&logoColor=white)
 
 #### 🧠 AI & Data Science
@@ -45,22 +44,10 @@
 
 ---
 
-### 📊 Vital Signs
-<div align="center">
-  <!-- Added &cache_seconds=1800 to help it refresh -->
-  <img src="https://github-readme-stats.vercel.app/api?username=KentDevu&show_icons=true&theme=tokyonight&count_private=true&cache_seconds=1800" alt="Kent's Stats" />
-  <br/>
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=KentDevu&theme=tokyonight" alt="Kent's Streak" />
-</div>
-
----
-
 ### ⚡ Fun Fact
 I don't just write code; I build digital employees. If a task takes more than 5 minutes and I have to do it twice, I'll spend 5 hours automating it.
 
-## 🌐 Connect with Me
-[![Facebook](https://img.shields.io/badge/Facebook-%231877F2.svg?logo=Facebook&logoColor=white)](https://facebook.com/harold.belen.92) [![Instagram](https://img.shields.io/badge/Instagram-%23E4405F.svg?logo=Instagram&logoColor=white)](https://instagram.com/kent.h.b) [![LinkedIn](https://img.shields.io/badge/LinkedIn-%230077B5.svg?logo=linkedin&logoColor=white)](https://linkedin.com/in/kentharoldbelen) 
+---
 
-<p align="center">
-  <img src="https://visitcount.itsvg.in/api?id=KentDevu&icon=0&color=0" />
-</p>
+### 🌐 Connect with Me
+[![Facebook](https://img.shields.io/badge/Facebook-%231877F2.svg?logo=Facebook&logoColor=white)](https://facebook.com/harold.belen.92) [![Instagram](https://img.shields.io/badge/Instagram-%23E4405F.svg?logo=Instagram&logoColor=white)](https://instagram.com/kent.h.b) [![LinkedIn](https://img.shields.io/badge/LinkedIn-%230077B5.svg?logo=linkedin&logoColor=white)](https://linkedin.com/in/kentharoldbelen)
