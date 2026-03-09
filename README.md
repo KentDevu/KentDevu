@@ -34,6 +34,18 @@
 
 ---
 
+<!-- Flappy Dragon Game -->
+<div align="center">
+  <h3>🐉 Flappy Dragon</h3>
+  <p><em>I built a mini-game. Think you can beat my score?</em></p>
+  <br/>
+  <a href="https://kentdevu.github.io/KentDevu/game/">
+    <img src="https://img.shields.io/badge/🐉_PLAY_FLAPPY_DRAGON-ff9e64?style=for-the-badge&labelColor=1a1b27" alt="Play Flappy Dragon" />
+  </a>
+</div>
+
+---
+
 <!-- Stats Section -->
 <div align="center">
   <h3>📊 GitHub Analytics</h3>

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flappy Dragon - Kent's Profile Game</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d1117;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  #gameWrapper {
+    position: relative;
+    border: 2px solid #6a5a4a;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(106,90,74,0.3);
+  }
+  canvas { display: block; }
+  #overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(13,17,23,0.85);
+    z-index: 10;
+    transition: opacity 0.3s;
+  }
+  #overlay.hidden { opacity: 0; pointer-events: none; }
+  #overlay h1 { font-size: 2.5rem; color: #e8d8a0; margin-bottom: 0.5rem; text-shadow: 0 0 20px rgba(232,216,160,0.5); }
+  #overlay .dragon-emoji { font-size: 4rem; margin-bottom: 1rem; }
+  #overlay p { color: #a9b1d6; font-size: 1rem; margin-bottom: 1.5rem; }
+  #overlay .score-display { color: #ff9e64; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; }
+  #overlay .best-score { color: #bb9af7; font-size: 1rem; margin-bottom: 1.5rem; }
+  #startBtn {
+    padding: 12px 36px; font-size: 1.1rem; font-weight: 600; color: #1a1b27;
+    background: linear-gradient(135deg, #c4952a, #8a6520);
+    border: none; border-radius: 8px; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  #startBtn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(196,149,42,0.5); }
+  .credit { color: #565f89; font-size: 0.85rem; margin-top: 1rem; }
+  .credit a { color: #c4952a; text-decoration: none; }
+</style>
+</head>
+<body>
+<div id="gameWrapper">
+  <canvas id="game"></canvas>
+  <div id="overlay">
+    <div class="dragon-emoji">🐉</div>
+    <h1>Flappy Dragon</h1>
+    <p id="overlayMsg">Press Space, Click, or Tap to play!</p>
+    <div id="scoreSection" style="display:none;">
+      <div class="score-display" id="finalScore"></div>
+      <div class="best-score" id="bestScore"></div>
+    </div>
+    <button id="startBtn">Play</button>
+    <p class="credit">Built by <a href="https://github.com/KentDevu" target="_blank" rel="noopener noreferrer">Kent</a></p>
+  </div>
+</div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const overlayMsg = document.getElementById('overlayMsg');
+const scoreSection = document.getElementById('scoreSection');
+const finalScoreEl = document.getElementById('finalScore');
+const bestScoreEl = document.getElementById('bestScore');
+const startBtn = document.getElementById('startBtn');
+
+const W = Math.min(480, window.innerWidth - 40);
+const H = Math.min(640, window.innerHeight - 40);
+canvas.width = W; canvas.height = H;
+
+let dragon, pipes, particles, score, gameState, frameCount, ground;
+let bestScore = parseInt(localStorage.getItem('flappyDragonBest') || '0', 10);
+
+const GRAVITY = 0.38, FLAP = -6.8, PIPE_SPEED = 2.5, PIPE_GAP = 170;
+const PIPE_WIDTH = 55, PIPE_INTERVAL = 105, GROUND_H = 60;
+
+// Load dragon spritesheet (6 frames in horizontal strip)
+const dragonSprite = new Image();
+dragonSprite.src = 'dragon-strip.png';
+let spriteLoaded = false;
+dragonSprite.onload = () => { spriteLoaded = true; };
+// Spritesheet: 4 frames, each 916x570 source pixels
+const FRAME_COUNT = 4, FRAME_W = 916, FRAME_H = 570;
+// Dragon display dimensions
+const DRAGON_W = 130, DRAGON_H = 80;
+const ANIM_SPEED = 8; // frames per game frame
+
+const stars = Array.from({length: 40}, () => ({
+  x: Math.random() * W, y: Math.random() * (H - GROUND_H),
+  size: Math.random() * 2 + 0.5, twinkle: Math.random() * Math.PI * 2
+}));
+
+function init() {
+  dragon = { x: W * 0.35, y: H * 0.4, w: 40, h: 36, vy: 0, alive: true };
+
+  pipes = []; particles = []; score = 0; frameCount = 0;
+  ground = { offset: 0 };
+}
+
+function flap() {
+  if (gameState === 'menu' || gameState === 'dead') {
+    gameState = 'playing'; overlay.classList.add('hidden'); init();
+  }
+  if (dragon.alive) { dragon.vy = FLAP; spawnParts(dragon.x - 10, dragon.y, 3); }
+}
+
+document.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); flap(); } });
+canvas.addEventListener('click', flap);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); flap(); }, { passive: false });
+startBtn.addEventListener('click', flap);
+
+function spawnParts(x, y, n) {
+  const colors = ['#ff9e64','#bb9af7','#70a5fd','#ffd700','#4a9e4a'];
+  for (let i = 0; i < n; i++) {
+    particles.push({ x, y, vx: (Math.random()-0.5)*3, vy: (Math.random()-0.5)*3,
+      life: 1, color: colors[Math.floor(Math.random()*colors.length)], size: Math.random()*4+2 });
+  }
+}
+
+function update() {
+  if (gameState !== 'playing') return;
+  frameCount++;
+  dragon.vy += GRAVITY;
+  dragon.y += dragon.vy;
+
+
+
+  if (dragon.y + dragon.h / 2 >= H - GROUND_H) { dragon.y = H - GROUND_H - dragon.h / 2; die(); }
+  if (dragon.y - dragon.h / 2 < 0) { dragon.y = dragon.h / 2; dragon.vy = 0; }
+
+  if (frameCount % PIPE_INTERVAL === 0) {
+    const topH = Math.random() * (H - GROUND_H - PIPE_GAP - 160) + 80;
+    pipes.push({ x: W + PIPE_WIDTH, topH, scored: false });
+  }
+  for (let i = pipes.length - 1; i >= 0; i--) {
+    const p = pipes[i]; p.x -= PIPE_SPEED;
+    if (!p.scored && p.x + PIPE_WIDTH < dragon.x) { p.scored = true; score++; }
+    if (dragon.alive) {
+      const hr = dragon.w / 2 - 2, vr = dragon.h / 2 - 2;
+      if (dragon.x + hr > p.x && dragon.x - hr < p.x + PIPE_WIDTH) {
+        if (dragon.y - vr < p.topH || dragon.y + vr > p.topH + PIPE_GAP) die();
+      }
+    }
+    if (p.x + PIPE_WIDTH < -10) pipes.splice(i, 1);
+  }
+  ground.offset = (ground.offset + PIPE_SPEED) % 32;
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const pt = particles[i]; pt.x += pt.vx; pt.y += pt.vy; pt.life -= 0.025;
+    if (pt.life <= 0) particles.splice(i, 1);
+  }
+}
+
+function die() {
+  if (!dragon.alive) return;
+  dragon.alive = false;
+  spawnParts(dragon.x, dragon.y, 15);
+  if (score > bestScore) { bestScore = score; localStorage.setItem('flappyDragonBest', String(bestScore)); }
+  setTimeout(() => {
+    gameState = 'dead'; overlay.classList.remove('hidden');
+    overlayMsg.textContent = 'Game Over! Tap to retry.';
+    scoreSection.style.display = 'block';
+    finalScoreEl.textContent = `Score: ${score}`;
+    bestScoreEl.textContent = `Best: ${bestScore}`;
+    startBtn.textContent = 'Retry';
+  }, 600);
+}
+
+
+// ============ EASTERN DRAGON DRAWING ============
+function drawDragon() {
+  if (!spriteLoaded) return;
+  const t = frameCount * 0.1;
+
+  ctx.save();
+  ctx.translate(dragon.x, dragon.y);
+
+  // Tilt based on velocity
+  const tilt = Math.min(Math.max(dragon.vy * 2, -20), 30);
+  ctx.rotate(tilt * Math.PI / 180);
+
+  // Gentle bob animation
+  const bob = Math.sin(t * 0.4) * 2;
+
+  // Animate through spritesheet frames
+  const frame = Math.floor(frameCount / ANIM_SPEED) % FRAME_COUNT;
+  const sx = frame * FRAME_W; // source x on strip
+
+  // Draw current frame, centered on dragon position
+  ctx.drawImage(
+    dragonSprite,
+    sx, 0, FRAME_W, FRAME_H,         // source rect
+    -DRAGON_W * 0.4, -DRAGON_H / 2 + bob, DRAGON_W, DRAGON_H  // dest rect
+  );
+
+  ctx.restore();
+}
+
+// ============ STONE TOWER PIPES ============
+function drawPipe(p) {
+  // Stone tower body
+  const stoneGrad = ctx.createLinearGradient(p.x, 0, p.x + PIPE_WIDTH, 0);
+  stoneGrad.addColorStop(0, '#5a5a6a');
+  stoneGrad.addColorStop(0.3, '#7a7a8a');
+  stoneGrad.addColorStop(0.7, '#6a6a7a');
+  stoneGrad.addColorStop(1, '#4a4a5a');
+
+  // Top tower
+  ctx.fillStyle = stoneGrad;
+  ctx.fillRect(p.x, 0, PIPE_WIDTH, p.topH);
+  // Stone brick lines
+  ctx.strokeStyle = 'rgba(40,40,50,0.4)';
+  ctx.lineWidth = 1;
+  for (let y = 0; y < p.topH; y += 16) {
+    ctx.beginPath(); ctx.moveTo(p.x, y); ctx.lineTo(p.x + PIPE_WIDTH, y); ctx.stroke();
+    const off = (Math.floor(y / 16) % 2) * (PIPE_WIDTH / 2);
+    ctx.beginPath(); ctx.moveTo(p.x + off, y); ctx.lineTo(p.x + off, y + 16); ctx.stroke();
+  }
+  // Turret cap
+  ctx.fillStyle = '#6a5a4a';
+  ctx.fillRect(p.x - 6, p.topH - 18, PIPE_WIDTH + 12, 18);
+  // Battlement notches
+  ctx.fillStyle = '#1a1b27';
+  const notchW = 8, notchH = 8, notchSpace = (PIPE_WIDTH + 12) / 4;
+  for (let i = 0; i < 4; i++) {
+    ctx.fillRect(p.x - 6 + i * notchSpace + 2, p.topH - 18, notchW, notchH);
+  }
+  // Tower outline
+  ctx.strokeStyle = '#3a3a4a';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(p.x, 0, PIPE_WIDTH, p.topH);
+
+  // Bottom tower
+  const bY = p.topH + PIPE_GAP;
+  ctx.fillStyle = stoneGrad;
+  ctx.fillRect(p.x, bY, PIPE_WIDTH, H - bY - GROUND_H);
+  ctx.strokeStyle = 'rgba(40,40,50,0.4)';
+  ctx.lineWidth = 1;
+  for (let y = bY; y < H - GROUND_H; y += 16) {
+    ctx.beginPath(); ctx.moveTo(p.x, y); ctx.lineTo(p.x + PIPE_WIDTH, y); ctx.stroke();
+    const off = (Math.floor((y - bY) / 16) % 2) * (PIPE_WIDTH / 2);
+    ctx.beginPath(); ctx.moveTo(p.x + off, y); ctx.lineTo(p.x + off, y + 16); ctx.stroke();
+  }
+  // Turret cap on bottom
+  ctx.fillStyle = '#6a5a4a';
+  ctx.fillRect(p.x - 6, bY, PIPE_WIDTH + 12, 18);
+  ctx.fillStyle = '#1a1b27';
+  for (let i = 0; i < 4; i++) {
+    ctx.fillRect(p.x - 6 + i * notchSpace + 2, bY + 10, notchW, notchH);
+  }
+  ctx.strokeStyle = '#3a3a4a';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(p.x, bY, PIPE_WIDTH, H - bY - GROUND_H);
+}
+
+// ============ DRAW LOOP ============
+function draw() {
+  // Medieval night sky
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H - GROUND_H);
+  skyGrad.addColorStop(0, '#0a0a1a');
+  skyGrad.addColorStop(0.3, '#141428');
+  skyGrad.addColorStop(0.6, '#1e1e3a');
+  skyGrad.addColorStop(1, '#2a2a4a');
+  ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, W, H - GROUND_H);
+
+  // Moon
+  ctx.fillStyle = '#e8e0c8';
+  ctx.beginPath(); ctx.arc(W * 0.8, 70, 30, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#d4ccb4';
+  ctx.beginPath(); ctx.arc(W * 0.8 + 5, 67, 28, 0, Math.PI * 2); ctx.fill();
+  // Moon glow
+  ctx.fillStyle = 'rgba(232,224,200,0.06)';
+  ctx.beginPath(); ctx.arc(W * 0.8, 70, 55, 0, Math.PI * 2); ctx.fill();
+
+  // Stars
+  stars.forEach(s => {
+    s.twinkle += 0.02;
+    ctx.globalAlpha = 0.3 + Math.sin(s.twinkle) * 0.3;
+    ctx.fillStyle = '#aaaa88';
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // Distant mountains/hills silhouette
+  ctx.fillStyle = '#15152a';
+  ctx.beginPath();
+  ctx.moveTo(0, H - GROUND_H);
+  ctx.lineTo(0, H - GROUND_H - 40);
+  ctx.quadraticCurveTo(W * 0.15, H - GROUND_H - 80, W * 0.25, H - GROUND_H - 50);
+  ctx.quadraticCurveTo(W * 0.35, H - GROUND_H - 30, W * 0.45, H - GROUND_H - 70);
+  ctx.quadraticCurveTo(W * 0.55, H - GROUND_H - 100, W * 0.65, H - GROUND_H - 55);
+  ctx.quadraticCurveTo(W * 0.8, H - GROUND_H - 35, W * 0.9, H - GROUND_H - 65);
+  ctx.lineTo(W, H - GROUND_H - 45);
+  ctx.lineTo(W, H - GROUND_H);
+  ctx.closePath();
+  ctx.fill();
+
+  pipes.forEach(drawPipe);
+
+  particles.forEach(pt => {
+    ctx.globalAlpha = pt.life;
+    ctx.fillStyle = pt.color;
+    ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size * pt.life, 0, Math.PI * 2); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  drawDragon();
+
+  // Medieval ground (dirt + grass)
+  const groundGrad = ctx.createLinearGradient(0, H - GROUND_H, 0, H);
+  groundGrad.addColorStop(0, '#4a6a2a');
+  groundGrad.addColorStop(0.1, '#3a5a20');
+  groundGrad.addColorStop(0.3, '#5a4a30');
+  groundGrad.addColorStop(1, '#3a3020');
+  ctx.fillStyle = groundGrad;
+  ctx.fillRect(0, H - GROUND_H, W, GROUND_H);
+  // Grass tufts on top
+  ctx.strokeStyle = '#5a8a30';
+  ctx.lineWidth = 2;
+  for (let i = -ground.offset; i < W + 20; i += 12) {
+    ctx.beginPath();
+    ctx.moveTo(i, H - GROUND_H);
+    ctx.quadraticCurveTo(i + 2, H - GROUND_H - 6, i + 4, H - GROUND_H);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(i + 5, H - GROUND_H);
+    ctx.quadraticCurveTo(i + 8, H - GROUND_H - 4, i + 10, H - GROUND_H);
+    ctx.stroke();
+  }
+  // Dirt line
+  ctx.strokeStyle = '#6a5a3a';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, H - GROUND_H + 8); ctx.lineTo(W, H - GROUND_H + 8); ctx.stroke();
+  // Stone path pattern in dirt
+  ctx.fillStyle = 'rgba(90,80,60,0.3)';
+  for (let i = -ground.offset; i < W + 40; i += 40) {
+    ctx.beginPath();
+    ctx.ellipse(i + 20, H - GROUND_H + 30, 14, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  if (gameState === 'playing') {
+    ctx.fillStyle = '#e8d8a0';
+    ctx.font = 'bold 36px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(232,216,160,0.4)'; ctx.shadowBlur = 10;
+    ctx.fillText(score, W / 2, 50);
+    ctx.shadowBlur = 0;
+  }
+}
+
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+gameState = 'menu'; init(); loop();
+</script>
+</body>
+</html>
