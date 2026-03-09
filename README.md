@@ -8,7 +8,8 @@
 
 ### 🐍 The Contribution Eater
 <div align="center">
-  <img src="https://github-raw-githubusercontent-com.translate.goog/platane/snk/output/github-contribution-grid-snake.svg?_x_tr_sl=auto&_x_tr_tl=en&_x_tr_hl=en" alt="snake game" />
+  <!-- This points to the branch created by the Action above -->
+  <img src="https://raw.githubusercontent.com/KentDevu/KentDevu/output/github-contribution-grid-snake.svg" alt="snake game" />
 </div>
 
 ---
@@ -46,9 +47,10 @@
 
 ### 📊 Vital Signs
 <div align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=KentDevu&theme=tokyonight&hide_border=false&include_all_commits=true&count_private=true" alt="Stats" />
+  <!-- Added &cache_seconds=1800 to help it refresh -->
+  <img src="https://github-readme-stats.vercel.app/api?username=KentDevu&show_icons=true&theme=tokyonight&count_private=true&cache_seconds=1800" alt="Kent's Stats" />
   <br/>
-  <img src="https://nirzak-streak-stats.vercel.app/?user=KentDevu&theme=tokyonight&hide_border=false" alt="Streak" />
+  <img src="https://github-readme-streak-stats.herokuapp.com/?user=KentDevu&theme=tokyonight" alt="Kent's Streak" />
 </div>
 
 ---
